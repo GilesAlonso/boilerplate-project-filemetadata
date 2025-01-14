@@ -12,8 +12,9 @@ app.get('/', function (req, res) {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
-// Multer setup
-var upload = multer({ dest: 'uploads/' });
+// Multer setup with memory storage
+var storage = multer.memoryStorage();
+var upload = multer({ storage: storage });
 
 app.post('/api/fileanalyse', upload.single('upfile'), (req, res) => {
   const { originalname, mimetype, size } = req.file;
