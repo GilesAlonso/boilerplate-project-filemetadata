@@ -1,37 +1,57 @@
-const express = require('express');
-const cors = require('cors');
-const multer = require('multer');
+var express = require('express');
+var cors = require('cors');
+var multer = require('multer');
 require('dotenv').config();
 
-const app = express();
+var app = express();
 
-// Enable CORS
+// Middleware
 app.use(cors());
-
-// Set up Multer for file handling
-const storage = multer.memoryStorage(); // Store files in memory (good for serverless environments like Vercel)
-const upload = multer({ storage: storage });
-
-// Serve static files (e.g., CSS, images)
 app.use('/public', express.static(process.cwd() + '/public'));
 
-// Serve the main HTML file
-app.get('/', (req, res) => {
+// Set up storage for uploaded files using multer
+var storage = multer.memoryStorage();  // Using memoryStorage as we don't need to save files to disk
+var upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // Limit the file size to 10 MB
+}).single('upfile'); // Expecting 'upfile' as the file input name
+
+// Serve index.html file
+app.get('/', function (req, res) {
   res.sendFile(process.cwd() + '/views/index.html');
 });
 
-// Handle file uploads and send JSON response with metadata
-app.post('/api/fileanalyse', upload.single('upfile'), (req, res) => {
-  const { originalname, mimetype, size } = req.file;
-  res.json({
-    name: originalname,
-    type: mimetype,
-    size: size
+// API route to handle file upload
+app.post('/api/fileanalyse', (req, res) => {
+  upload(req, res, function (err) {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        // Multer specific error
+        return res.status(400).send(`Multer error: ${err.message}`);
+      } else {
+        // Generic error
+        return res.status(500).send(`Server error: ${err.message}`);
+      }
+    }
+
+    // If file is uploaded successfully, return file metadata
+    if (!req.file) {
+      return res.status(400).send('No file uploaded.');
+    }
+
+    const { originalname, mimetype, size } = req.file;
+    console.log(`File uploaded: ${originalname}, ${mimetype}, ${size} bytes`);
+
+    res.json({
+      name: originalname,
+      type: mimetype,
+      size: size
+    });
   });
 });
 
 // Start the server
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Your app is listening on port ${port}`);
+app.listen(port, function () {
+  console.log('Your app is listening on port ' + port);
 });
