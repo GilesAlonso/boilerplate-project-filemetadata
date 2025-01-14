@@ -1,11 +1,12 @@
 {
-  "public": "public",
   "builds": [
     { "src": "index.js", "use": "@vercel/node" },
-    { "src": "views/index.html", "use": "@vercel/static" }
+    { "src": "views/**/*", "use": "@vercel/static" },
+    { "src": "public/**/*", "use": "@vercel/static" }
   ],
   "routes": [
     { "src": "/", "dest": "/views/index.html" }
   ]
 }
+
 
