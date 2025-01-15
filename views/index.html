@@ -35,28 +35,35 @@
       </p>
     </div>
 
-    <script>
-      // Add event listener to handle form submission
-      const form = document.querySelector('form');
-      const output = document.getElementById('output');
-      
-      form.addEventListener('submit', async (event) => {
-        event.preventDefault();
+<script>
+  // Add event listener to handle form submission
+  const form = document.querySelector('form');
+  const output = document.getElementById('output');
 
-        const formData = new FormData(form);
-        
-        const response = await fetch('/api/fileanalyse', {
-          method: 'POST',
-          body: formData,
-        });
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    output.innerHTML = 'Uploading...';
 
-        if (response.ok) {
-          const data = await response.json();
-          output.innerHTML = `Name: ${data.name} <br> Type: ${data.type} <br> Size: ${data.size} bytes`;
-        } else {
-          output.innerHTML = 'Error uploading the file.';
-        }
+    try {
+      const formData = new FormData(form);
+
+      const response = await fetch('/api/fileanalyse', {
+        method: 'POST',
+        body: formData,
       });
-    </script>
+
+      if (response.ok) {
+        const data = await response.json();
+        output.innerHTML = `Name: ${data.name} <br> Type: ${data.type} <br> Size: ${data.size} bytes`;
+      } else {
+        const errorText = await response.text();
+        output.innerHTML = `Error: ${errorText}`;
+      }
+    } catch (error) {
+      output.innerHTML = `Error uploading the file: ${error.message}`;
+    }
+  });
+</script>
+
   </body>
 </html>
