@@ -9,39 +9,27 @@ var app = express();
 app.use(cors());
 app.use('/public', express.static(process.cwd() + '/public'));
 
-// Set up storage for uploaded files using multer
-var storage = multer.memoryStorage();  // Using memoryStorage as we don't need to save files to disk
-var upload = multer({
-  storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // Limit the file size to 10 MB
-}).single('upfile'); // Expecting 'upfile' as the file input name
+// Set up multer for handling file uploads
+var storage = multer.memoryStorage(); // Using memoryStorage to avoid saving files to disk
+var upload = multer({ storage: storage }).single('upfile');
 
-// Serve index.html file
+// Serve the index.html file
 app.get('/', function (req, res) {
-  res.sendFile(process.cwd() + '/views/index.html');
+  res.sendFile(process.cwd() + '/views/index.html'); // Ensure 'views/index.html' exists
 });
 
-// API route to handle file upload
-app.post('/api/fileanalyse', (req, res) => {
+// File upload endpoint
+app.post('/api/fileanalyse', function (req, res) {
   upload(req, res, function (err) {
     if (err) {
-      if (err instanceof multer.MulterError) {
-        // Multer specific error
-        return res.status(400).send(`Multer error: ${err.message}`);
-      } else {
-        // Generic error
-        return res.status(500).send(`Server error: ${err.message}`);
-      }
+      return res.status(500).json({ error: 'Error uploading the file' });
     }
 
-    // If file is uploaded successfully, return file metadata
     if (!req.file) {
-      return res.status(400).send('No file uploaded.');
+      return res.status(400).json({ error: 'No file uploaded' });
     }
 
     const { originalname, mimetype, size } = req.file;
-    console.log(`File uploaded: ${originalname}, ${mimetype}, ${size} bytes`);
-
     res.json({
       name: originalname,
       type: mimetype,
@@ -53,5 +41,5 @@ app.post('/api/fileanalyse', (req, res) => {
 // Start the server
 const port = process.env.PORT || 3000;
 app.listen(port, function () {
-  console.log('Your app is listening on port ' + port);
+  console.log(`Your app is listening on port ${port}`);
 });
