@@ -8,7 +8,6 @@ var app = express();
 
 // Middleware
 app.use(cors());
-app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Set up storage for uploaded files using multer
 var storage = multer.memoryStorage();
@@ -17,10 +16,8 @@ var upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
 }).single('upfile');
 
-// Serve index.html file
-app.get('/', function (req, res) {
-  res.sendFile(path.join(__dirname, 'views', 'index.html'));
-});
+// Serve static files first, ensuring that they are served properly
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // API route to handle file upload
 app.post('/api/fileanalyse', (req, res) => {
@@ -41,6 +38,11 @@ app.post('/api/fileanalyse', (req, res) => {
       size: size
     });
   });
+});
+
+// Serve index.html after API and static assets
+app.get('/', function (req, res) {
+  res.sendFile(path.join(__dirname, 'views', 'index.html'));
 });
 
 // Start the server
